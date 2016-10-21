@@ -1,0 +1,21 @@
+---
+
+- hosts: all
+  gather_facts: no
+  connection: local
+  tasks:
+    - nova_compute:
+        name: "{{ inventory_hostname }}"
+        auth_url: "{{ os_auth_url }}"
+        login_username: "{{ lookup('env', 'OS_USERNAME') }}"
+        login_password: "{{ lookup('env', 'OS_PASSWORD') }}"
+        login_tenant_name: "{{ os_tenant_name }}"
+        key_name: "{{ ansible_ssh_key }}"
+        image_name: "{{ os_image_name }}"
+        flavor_ram: "{{ os_flavor_ram }}"
+        flavor_include: "{{ os_flavor_include }}"
+        nics:
+          - net-id: "{{ os_net_id }}"
+        security_groups: "{{ os_security_group }}"
+      always_run: yes
+      register: host

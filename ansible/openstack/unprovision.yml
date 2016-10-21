@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+  gather_facts: no
+  connection: local
+  tasks:
+    - nova_compute:
+        name: "{{ inventory_hostname }}"
+        state: absent
