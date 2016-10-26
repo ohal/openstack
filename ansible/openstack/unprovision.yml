@@ -4,6 +4,6 @@
   gather_facts: no
   connection: local
   tasks:
-    - nova_compute:
+    - os_server:
         name: "{{ inventory_hostname }}"
         state: absent

@@ -1,21 +1,62 @@
 ---
 
-- hosts: all
+- hosts: controller
   gather_facts: no
   connection: local
   tasks:
-    - nova_compute:
+    - os_server:
         name: "{{ inventory_hostname }}"
-        auth_url: "{{ os_auth_url }}"
-        login_username: "{{ lookup('env', 'OS_USERNAME') }}"
-        login_password: "{{ lookup('env', 'OS_PASSWORD') }}"
-        login_tenant_name: "{{ os_tenant_name }}"
+        auth:
+            auth_url: "{{ os_auth_url }}"
+            username: "{{ lookup('env', 'OS_USERNAME') }}"
+            password: "{{ lookup('env', 'OS_PASSWORD') }}"
+            project_name: "{{ os_tenant_name }}"
         key_name: "{{ ansible_ssh_key }}"
-        image_name: "{{ os_image_name }}"
+        image: "{{ os_image_name }}"
         flavor_ram: "{{ os_flavor_ram }}"
         flavor_include: "{{ os_flavor_include }}"
         nics:
-          - net-id: "{{ os_net_id }}"
+            - net-id: "{{ os_net_id }}"
         security_groups: "{{ os_security_group }}"
+        userdata: "{{ lookup('file', '../files/master.yaml') }}"
+        auto_ip: no # do not associate floating IPs
       always_run: yes
       register: host
+    - debug:
+        var: host.openstack.private_v4
+    - template:
+        src: "../files/node.yaml.j2"
+        dest: "../files/node.yaml"
+    - local_action:
+        file path="{{ output_file }}" state=touch
+      run_once: yes
+    - local_action:
+        lineinfile line="{{ host.openstack.private_v4 }} {{ host.openstack.name }}" insertafter=EOF dest="{{ output_file }}"
+
+- hosts: node
+  gather_facts: no
+  connection: local
+  tasks:
+    - os_server:
+        name: "{{ inventory_hostname }}"
+        auth:
+            auth_url: "{{ os_auth_url }}"
+            username: "{{ lookup('env', 'OS_USERNAME') }}"
+            password: "{{ lookup('env', 'OS_PASSWORD') }}"
+            project_name: "{{ os_tenant_name }}"
+        key_name: "{{ ansible_ssh_key }}"
+        image: "{{ os_image_name }}"
+        flavor_ram: "{{ os_flavor_ram }}"
+        flavor_include: "{{ os_flavor_include }}"
+        nics:
+            - net-id: "{{ os_net_id }}"
+        security_groups: "{{ os_security_group }}"
+        userdata: "{{ lookup('file', '../files/node.yaml') }}"
+        auto_ip: no # do not associate floating IPs
+      always_run: yes
+      register: host
+    - local_action:
+        file path="{{ output_file }}" state=touch
+      run_once: yes
+    - local_action:
+        lineinfile line="{{ host.openstack.private_v4 }} {{ host.openstack.name }}" insertafter=EOF dest="{{ output_file }}"

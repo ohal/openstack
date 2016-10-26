@@ -5,10 +5,12 @@ ansible_ssh_pubkey: "{{ lookup('file','~/.ssh/id_rsa.pub') }}"
 
 os_flavor_ram: 2048
 os_flavor_include: small
-os_image_name: ubuntu-cloud-14.04-x86_64
+os_image_name: coreos-899.17.0
 
 os_auth_url: /PLACEHOLDER/
 os_tenant_name: /PLACEHOLDER/
 os_tenant_id: /PLACEHOLDER/
 os_net_id: /PLACEHOLDER/
 os_security_group: default
+
+output_file: "{{ lookup('env', 'PWD') }}/output"
